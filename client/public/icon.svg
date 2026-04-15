@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="96" fill="#0f0f1a"/>
+  <!-- Subtle radial glow -->
+  <radialGradient id="glow" cx="50%" cy="40%" r="55%">
+    <stop offset="0%" stop-color="#1e1e3a"/>
+    <stop offset="100%" stop-color="#0f0f1a"/>
+  </radialGradient>
+  <rect width="512" height="512" rx="96" fill="url(#glow)"/>
+  <!-- Chess knight path (simplified, clean) -->
+  <!-- Base/stand -->
+  <rect x="152" y="400" width="208" height="28" rx="14" fill="#e2e2e8" opacity="0.9"/>
+  <rect x="172" y="380" width="168" height="24" rx="8" fill="#e2e2e8" opacity="0.85"/>
+  <!-- Knight body -->
+  <path d="
+    M 220 372
+    L 208 320
+    C 200 290 188 265 188 240
+    C 188 210 196 188 208 172
+    C 220 156 235 148 248 140
+    C 238 132 230 120 228 108
+    C 240 112 252 116 260 124
+    C 268 116 280 108 296 104
+    C 300 116 298 128 292 140
+    C 308 148 324 160 332 176
+    C 344 196 348 220 340 248
+    C 332 272 316 296 308 320
+    L 292 372
+    Z
+  " fill="#e2e2e8" opacity="0.92"/>
+  <!-- Eye -->
+  <circle cx="278" cy="160" r="10" fill="#0f0f1a"/>
+  <circle cx="281" cy="157" r="3.5" fill="#e2e2e8" opacity="0.6"/>
+  <!-- Nostril/muzzle accent -->
+  <ellipse cx="298" cy="192" rx="8" ry="5" fill="#0f0f1a" opacity="0.4"/>
+  <!-- Mane accent -->
+  <path d="M 232 148 Q 246 160 248 178 Q 242 168 234 162 Z" fill="#0f0f1a" opacity="0.25"/>
+  <!-- Emerald accent dot -->
+  <circle cx="256" cy="448" r="6" fill="#34d399" opacity="0.7"/>
+</svg>
