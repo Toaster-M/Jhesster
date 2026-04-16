@@ -6,7 +6,9 @@ import type { Lesson, LessonCategory } from '../data/lessons';
 import { OPENINGS } from '../data/openings';
 import OpeningExplorer from './OpeningExplorer';
 
-// ── Progress stored in localStorage ──────────────────────────────────────────
+// ── Lesson completion persistence ────────────────────────────────────────────
+// Completed lesson IDs are stored as a JSON array in localStorage so progress
+// survives page reloads without needing a backend.
 
 const STORAGE_KEY = 'jhesster_lessons_complete';
 
@@ -24,6 +26,8 @@ function saveCompleted(ids: Set<string>): void {
 }
 
 // ── Step-through lesson reader ────────────────────────────────────────────────
+// Full-screen view that walks through a lesson's steps one at a time,
+// showing an optional board diagram and text content for each step.
 
 function LessonReader({ lesson, onBack, onComplete }: { lesson: Lesson; onBack: () => void; onComplete: () => void }) {
   const [stepIndex, setStepIndex] = useState(0);
@@ -147,6 +151,8 @@ function LessonReader({ lesson, onBack, onComplete }: { lesson: Lesson; onBack: 
 }
 
 // ── Lesson card ───────────────────────────────────────────────────────────────
+// Summary tile shown in the lesson grid; displays category icon, title,
+// summary text, and a completion badge when the lesson is done.
 
 function LessonCard({ lesson, completed, onClick }: { lesson: Lesson; completed: boolean; onClick: () => void }) {
   const cat = LESSON_CATEGORIES[lesson.category];
@@ -177,6 +183,8 @@ function LessonCard({ lesson, completed, onClick }: { lesson: Lesson; completed:
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
+// Top-level Learning Center screen with Lessons and Openings tabs.
+// Manages which lesson (or the Opening Explorer) is currently active.
 
 interface LearningCenterProps {
   onBack: () => void;
@@ -185,6 +193,7 @@ interface LearningCenterProps {
 type MainView = 'lessons' | 'openings';
 
 export default function LearningCenter({ onBack }: LearningCenterProps) {
+  // ── State ─────────────────────────────────────────────────────────────────
   const [mainView,       setMainView]       = useState<MainView>('lessons');
   const [activeLesson,   setActiveLesson]   = useState<Lesson | null>(null);
   const [completed,      setCompleted]      = useState<Set<string>>(loadCompleted);
@@ -205,7 +214,7 @@ export default function LearningCenter({ onBack }: LearningCenterProps) {
     setActiveLesson(null);
   };
 
-  // ── Leaf views ────────────────────────────────────────────────────────────
+  // ── Route to leaf views (lesson reader or opening explorer) ──────────────
 
   if (activeLesson) {
     return (

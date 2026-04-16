@@ -33,6 +33,8 @@ export function usePuzzle(puzzle: Puzzle): UsePuzzleReturn {
   /** Derive player color from the side to move in the opening FEN */
   const playerColor: Color = chessRef.current.turn() as Color;
 
+  // ── State snapshot builder ─────────────────────────────────────────────────
+
   function buildState(
     status:          PuzzleStatus,
     playerMoveIndex: number,
@@ -59,10 +61,12 @@ export function usePuzzle(puzzle: Puzzle): UsePuzzleReturn {
     };
   }
 
+  // ── Puzzle state ──────────────────────────────────────────────────────────
   const [state, setState] = useState<PuzzleState>(() =>
     buildState('playing', 0, null, null, 0, null)
   );
 
+  // ── Engine reply: plays the opponent's response after a correct player move
   const applyEngineReply = useCallback(
     (playerMoveIndex: number, lastPlayerMove: { from: Square; to: Square }) => {
       const replyIndex = playerMoveIndex + 1;
@@ -94,6 +98,8 @@ export function usePuzzle(puzzle: Puzzle): UsePuzzleReturn {
     },
     [puzzle]
   );
+
+  // ── User interaction ──────────────────────────────────────────────────────
 
   const handleSquareClick = useCallback(
     (square: Square) => {
@@ -167,6 +173,8 @@ export function usePuzzle(puzzle: Puzzle): UsePuzzleReturn {
     },
     [puzzle, playerColor, applyEngineReply]
   );
+
+  // ── Hint / solution reveal / reset ───────────────────────────────────────
 
   const showHint = useCallback(() => {
     setState((prev) => {

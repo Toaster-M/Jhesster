@@ -41,6 +41,7 @@ export default function Board({
   const labelStyle  = { color: prefs.boardFrame.labelColor } as React.CSSProperties;
   const legalSquares = new Set(legalMoves.map((m) => m.to));
 
+  // ── Row/column order — reverse both axes when the board is flipped ──────────
   const rows = isFlipped
     ? [...Array(8)].map((_, i) => 7 - i)
     : [...Array(8)].map((_, i) => i);
@@ -61,6 +62,7 @@ export default function Board({
   const isTopActive = currentTurn === topPlayerColor;
   const isBottomActive = currentTurn === bottomPlayerColor;
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className={`flex flex-col gap-1 ${prefs.animationsEnabled ? 'animate-fade-in-scale' : ''}`}>
       {/* Top player label */}

@@ -71,12 +71,12 @@ function PageLoader() {
 }
 
 export default function App() {
-  // Auth
+  // ── Auth state ────────────────────────────────────────────────────────────
   const { user, isAuthenticated, isLoading: authLoading, error: authError, login, register, logout, clearError } = useAuth();
   const [authScreen, setAuthScreen] = useState<AuthScreen>('login');
   const [showAuth, setShowAuth]     = useState(false);
 
-  // Game
+  // ── Game setup state ──────────────────────────────────────────────────────
   const [screen, setScreen]           = useState<AppScreen>('menu');
   const [mode, setMode]               = useState<GameMode>('vs-ai');
   const [difficulty, setDifficulty]   = useState(3);
@@ -96,7 +96,7 @@ export default function App() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showSaveOnLeave, setShowSaveOnLeave] = useState(false);
 
-  // Online
+  // ── Online game state ─────────────────────────────────────────────────────
   const [onlineParams, setOnlineParams] = useState<OnlineGameParams | null>(null);
   const [socket, setSocket]             = useState<Socket | null>(null);
 
@@ -106,6 +106,7 @@ export default function App() {
   const gameHistory = useGameStore((s) => s.gameContext.history);
   const gameIsOver  = useGameStore((s) => s.isGameOver);
 
+  // ── Socket lifecycle — connect on login, disconnect on logout ────────────
   // Connect / disconnect socket when auth state changes
   useEffect(() => {
     if (isAuthenticated) {
@@ -134,6 +135,8 @@ export default function App() {
       setOnlineParams(null);
     }
   }, [isAuthenticated]);
+
+  // ── Event handlers ────────────────────────────────────────────────────────
 
   const handleDifficultyChange = (d: number) => {
     setDifficulty(d);

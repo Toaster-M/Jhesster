@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { ChessGame } from '../utils/chessHelpers';
 import type { Square, Move, PieceSymbol, GameContext, GameSettings, GameMode, Color } from '../types/chess';
 
+// ── Store interface ───────────────────────────────────────────────────────────
+
 interface GameStore {
   // State
   game: ChessGame;
@@ -23,6 +25,8 @@ interface GameStore {
   setGameSettings: (settings: Partial<GameSettings>) => void;
 }
 
+// ── Helper: snapshot current game state into a plain GameContext object ───────
+
 function buildGameContext(game: ChessGame): GameContext {
   const status = game.getGameStatus();
   const board = game.getBoard().map((row) =>
@@ -37,12 +41,16 @@ function buildGameContext(game: ChessGame): GameContext {
   };
 }
 
+// ── Default settings ──────────────────────────────────────────────────────────
+
 const defaultSettings: GameSettings = {
   mode: 'vs-ai' as GameMode,
   difficulty: 3,
   playerColor: 'w',
   isFlipped: false,
 };
+
+// ── Store creation ────────────────────────────────────────────────────────────
 
 export const useGameStore = create<GameStore>((set, get) => ({
   game: new ChessGame(),
@@ -53,6 +61,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lastMove: null,
   isGameOver: false,
   winner: null,
+
+  // ── Actions ────────────────────────────────────────────────────────────────
 
   initializeGame: () => {
     const game = new ChessGame();

@@ -1,5 +1,7 @@
 import type { Move } from '../types/chess';
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 interface PgnOptions {
   white?:  string;
   black?:  string;
@@ -53,6 +55,8 @@ export function downloadPgn(history: Move[], opts: PgnOptions = {}): void {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+// ── Internal helpers ──────────────────────────────────────────────────────────
 
 function wrapText(text: string, maxLen: number): string {
   const words = text.split(' ');

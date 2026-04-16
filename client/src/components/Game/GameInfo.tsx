@@ -22,6 +22,8 @@ interface GameInfoProps {
   pgnNames?: { white: string; black: string };
 }
 
+// ── Material counting helpers ─────────────────────────────────────────────────
+
 const PIECE_VALUES: Record<string, number> = {
   p: 1, n: 3, b: 3, r: 5, q: 9, k: 0,
 };
@@ -29,6 +31,9 @@ const PIECE_VALUES: Record<string, number> = {
 function getMaterialCount(pieces: PieceSymbol[]): number {
   return pieces.reduce((sum, p) => sum + (PIECE_VALUES[p] ?? 0), 0);
 }
+
+// ── Status message resolver ───────────────────────────────────────────────────
+// Returns a display string and colour tone based on the current game state.
 
 function getStatusMessage(
   status: GameStatus,
@@ -69,6 +74,8 @@ function getStatusMessage(
   const who = status.turn === playerColor ? 'Your turn' : 'AI to move';
   return { text: who, tone: 'neutral' };
 }
+
+// ── Tone → CSS class mapping ──────────────────────────────────────────────────
 
 const TONE_CLASSES: Record<string, string> = {
   neutral: 'bg-white/5 text-gray-300 border border-white/10',

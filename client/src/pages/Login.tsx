@@ -8,10 +8,12 @@ interface LoginProps {
 }
 
 export default function Login({ onLogin, onGoRegister, error, isLoading }: LoginProps) {
+  // ── Local form state ──────────────────────────────────────────────────────
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fieldError, setFieldError] = useState('');
 
+  // ── Form submission — client-side validation then delegates to prop handler
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setFieldError('');

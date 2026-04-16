@@ -1,6 +1,10 @@
 import { Chess } from 'chess.js';
 import type { Color, PieceSymbol, Square, Move, GameStatus, CapturedPieces } from '../types/chess';
 
+// ── ChessGame wrapper ─────────────────────────────────────────────────────────
+// Thin adapter around chess.js that exposes only what the app needs,
+// translating between chess.js types and the app's own type definitions.
+
 export class ChessGame {
   private chess: Chess;
 
@@ -192,6 +196,8 @@ export class ChessGame {
 }
 
 // ── Natural-language move parser ──────────────────────────────────────────────
+// Converts phrases like "knight to a3" into a concrete { from, to } move using
+// the current board's legal moves for disambiguation.
 
 const NL_PIECE_NAMES: Record<string, PieceSymbol> = {
   king: 'k',   kings: 'k',
@@ -264,6 +270,9 @@ export function parseNaturalLanguageMove(
   };
 }
 
+// ── Display utilities ─────────────────────────────────────────────────────────
+// Board coordinate conversion and piece rendering helpers.
+
 // Always use the solid/filled Unicode set (the "black" glyph shapes) for both colours.
 // Colour and contrast are handled by CSS in Square.tsx.
 const PIECE_GLYPH: Record<PieceSymbol, string> = {
@@ -289,6 +298,8 @@ export function indicesToSquare(row: number, col: number): Square {
 export function isLightSquare(row: number, col: number): boolean {
   return (row + col) % 2 === 0;
 }
+
+// ── Move history formatters ───────────────────────────────────────────────────
 
 export function formatMoveHistory(moves: Move[]): string[] {
   return moves.map((move, index) => {

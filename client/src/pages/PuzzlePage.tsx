@@ -5,7 +5,10 @@ import PUZZLES from '../data/puzzles';
 import type { Puzzle } from '../data/puzzles';
 import { usePuzzle } from '../hooks/usePuzzle';
 
-// ── Theme badge colours ───────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+// Maps puzzle theme names to badge colour classes
+
 const THEME_COLOR: Record<string, string> = {
   checkmate:          'bg-red-500/20 text-red-300 border-red-500/30',
   'back-rank':        'bg-orange-500/20 text-orange-300 border-orange-500/30',
@@ -26,6 +29,8 @@ interface FilterState {
 }
 
 // ── Single-puzzle view ────────────────────────────────────────────────────────
+// Renders the board, status banner, hint/solution buttons, and a sidebar
+// with puzzle metadata for the currently active puzzle.
 
 function PuzzleBoard({ puzzle, onNext, onBack }: { puzzle: Puzzle; onNext: () => void; onBack: () => void }) {
   const {
@@ -160,6 +165,8 @@ function PuzzleBoard({ puzzle, onNext, onBack }: { puzzle: Puzzle; onNext: () =>
 }
 
 // ── Puzzle list / filter view ─────────────────────────────────────────────────
+// Top-level page: shows difficulty + theme filters and a grid of puzzle cards.
+// Clicking a card switches to the single-puzzle view.
 
 interface PuzzlePageProps {
   onBack: () => void;

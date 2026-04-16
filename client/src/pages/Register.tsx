@@ -8,12 +8,14 @@ interface RegisterProps {
 }
 
 export default function Register({ onRegister, onGoLogin, error, isLoading }: RegisterProps) {
+  // ── Local form state ──────────────────────────────────────────────────────
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [fieldError, setFieldError] = useState('');
 
+  // ── Form submission — client-side validation then delegates to prop handler
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setFieldError('');

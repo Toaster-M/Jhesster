@@ -3,6 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import type { Square, PieceSymbol, GameSettings } from '../types/chess';
 
 export function useGame() {
+  // ── State selectors — read from the global game store ──────────────────────
   const game = useGameStore((s) => s.game);
   const gameContext = useGameStore((s) => s.gameContext);
   const settings = useGameStore((s) => s.settings);
@@ -12,6 +13,7 @@ export function useGame() {
   const isGameOver = useGameStore((s) => s.isGameOver);
   const winner = useGameStore((s) => s.winner);
 
+  // ── Action selectors — pull store dispatch functions ──────────────────────
   const storeSelectSquare = useGameStore((s) => s.selectSquare);
   const storeMakeMove = useGameStore((s) => s.makeMove);
   const storeResetGame = useGameStore((s) => s.resetGame);
@@ -19,6 +21,7 @@ export function useGame() {
   const storeInitializeGame = useGameStore((s) => s.initializeGame);
   const storeSetSettings = useGameStore((s) => s.setGameSettings);
 
+  // ── Stable callback wrappers — memoised handlers for component consumers ──
   const handleSquareClick = useCallback(
     (square: Square) => {
       storeSelectSquare(square);

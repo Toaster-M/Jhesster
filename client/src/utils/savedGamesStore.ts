@@ -1,7 +1,11 @@
 import type { SavedGame } from '../types/chess';
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const STORAGE_KEY = 'jhesster_saved_games';
-const MAX_SAVES = 10;
+const MAX_SAVES = 10; // cap to prevent localStorage bloat
+
+// ── CRUD helpers — read, write, delete saved games from localStorage ──────────
 
 export function getSavedGames(): SavedGame[] {
   try {

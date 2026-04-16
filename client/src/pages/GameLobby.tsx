@@ -11,6 +11,7 @@ interface GameLobbyProps {
 }
 
 export default function GameLobby({ socket, myUserId, myUsername, onGameStart, onBack }: GameLobbyProps) {
+  // ── WebSocket state — lobby users, invite flow, errors ───────────────────
   const {
     lobbyUsers,
     incomingInvite,
@@ -23,6 +24,7 @@ export default function GameLobby({ socket, myUserId, myUsername, onGameStart, o
     cancelInvite,
   } = useWebSocket(socket, { myUserId, onGameStart });
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#0f0f1a] flex flex-col">
       {/* Header */}

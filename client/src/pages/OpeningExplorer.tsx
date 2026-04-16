@@ -5,6 +5,7 @@ import type { Opening, OpeningNode } from '../data/openings';
 import type { Square } from '../types/chess';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+// Utility functions shared by the tree navigator and card components.
 
 function nodeLastMove(node: OpeningNode): { from: Square; to: Square } | null {
   if (!node.lastMove || node.lastMove.length < 4) return null;
@@ -59,6 +60,8 @@ function Breadcrumb({
 }
 
 // ── Tree navigator ────────────────────────────────────────────────────────────
+// Full-screen view for exploring a single opening's variation tree.
+// Maintains a `path` array representing the user's current depth in the tree.
 
 interface ExplorerProps {
   opening: Opening;
@@ -219,6 +222,7 @@ function OpeningTreeNav({ opening, onBack }: ExplorerProps) {
 }
 
 // ── Opening card ──────────────────────────────────────────────────────────────
+// Summary tile in the opening selection grid; includes a 4×4 mini-board preview.
 
 const DIFFICULTY_LABEL = ['', 'Beginner', 'Intermediate', 'Advanced'] as const;
 const DIFFICULTY_COLOR = ['', 'text-emerald-400', 'text-yellow-400', 'text-orange-400'] as const;
@@ -293,6 +297,8 @@ function OpeningCard({
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
+// Lists all available openings with colour filtering; clicking one enters the
+// full-screen tree navigator.
 
 interface OpeningExplorerProps {
   openings: Opening[];

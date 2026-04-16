@@ -24,6 +24,8 @@ function isLightColor(hex: string): boolean {
   return (0.299 * r + 0.587 * g + 0.114 * b) > 128;
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function Square({
   square,
   piece,
@@ -38,6 +40,7 @@ export default function Square({
   const { row, col } = squareToIndices(square);
   const light = isLightSquare(row, col);
 
+  // ── Background colour — selected > last-move tint > default light/dark ─────
   // Determine background colour
   let bg: string;
   if (isSelected) {
@@ -57,7 +60,7 @@ export default function Square({
     style.boxShadow = `inset 0 0 0 100vmax ${theme.lastMove}`;
   }
 
-  // Piece rendering
+  // ── Piece rendering — compute fill colour and multi-direction text-shadow ───
   let pieceColor = '';
   let pieceShadow = '';
   if (piece) {

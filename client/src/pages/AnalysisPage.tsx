@@ -7,7 +7,9 @@ import { useAnalysis } from '../hooks/useAnalysis';
 import type { MoveAnnotation } from '../hooks/useAnalysis';
 import { downloadPgn } from '../utils/pgnExport';
 
-// ── Annotation badge ──────────────────────────────────────────────────────────
+// ── Annotation display helpers ────────────────────────────────────────────────
+// Maps move annotation symbols (e.g. "??") to Tailwind colour classes and
+// human-readable titles shown in tooltips.
 
 const ANNOTATION_STYLE: Record<MoveAnnotation, string> = {
   '!!': 'text-emerald-400 font-black',
@@ -37,6 +39,7 @@ interface AnalysisPageProps {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AnalysisPage({ history, onBack }: AnalysisPageProps) {
+  // ── Analysis hook — loads positions and drives sequential engine evaluation
   const {
     positions,
     currentIndex,
@@ -61,6 +64,7 @@ export default function AnalysisPage({ history, onBack }: AnalysisPageProps) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [goBack, goForward, goToStart, goToEnd]);
 
+  // ── Derive board position and annotation summary ───────────────────────────
   // Derive board from current FEN
   const chess = new Chess(currentPosition.fen);
   const board = chess.board();

@@ -1,4 +1,4 @@
-// Core chess types
+// ── Core primitives ───────────────────────────────────────────────────────────
 
 export type Color = 'w' | 'b';
 
@@ -18,6 +18,8 @@ export type Square =
   | 'a6' | 'b6' | 'c6' | 'd6' | 'e6' | 'f6' | 'g6' | 'h6'
   | 'a7' | 'b7' | 'c7' | 'd7' | 'e7' | 'f7' | 'g7' | 'h7'
   | 'a8' | 'b8' | 'c8' | 'd8' | 'e8' | 'f8' | 'g8' | 'h8';
+
+// ── Move and board state ──────────────────────────────────────────────────────
 
 export interface Move {
   from: Square;
@@ -55,6 +57,8 @@ export interface GameContext {
   fen: string;
 }
 
+// ── Game configuration ────────────────────────────────────────────────────────
+
 export type GameMode = 'vs-ai' | 'local-multiplayer';
 
 export interface GameSettings {
@@ -63,6 +67,8 @@ export interface GameSettings {
   playerColor: Color;
   isFlipped: boolean;
 }
+
+// ── Engine evaluation ─────────────────────────────────────────────────────────
 
 export interface EngineEvaluation {
   score: number;

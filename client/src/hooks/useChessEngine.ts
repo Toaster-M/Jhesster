@@ -3,18 +3,22 @@ import { getChessEngine } from '../services/chessEngine';
 import type { EngineEvaluation } from '../types/chess';
 
 export function useChessEngine() {
+  // ── Local state ───────────────────────────────────────────────────────────
   const [isThinking, setIsThinking] = useState(false);
   const [evaluation, setEvaluation] = useState<EngineEvaluation | null>(null);
   const [bestMove, setBestMove] = useState<string | null>(null);
   const engineRef = useRef(getChessEngine());
   const isMounted = useRef(true);
 
+  // Track mount state to avoid setting state after unmount
   useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
     };
   }, []);
+
+  // ── Engine actions ────────────────────────────────────────────────────────
 
   const getBestMove = useCallback(async (fen: string): Promise<string> => {
     setIsThinking(true);

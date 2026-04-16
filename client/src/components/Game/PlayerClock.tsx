@@ -1,8 +1,12 @@
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 interface PlayerClockProps {
   timeMs:   number;
   isActive: boolean;
   name:     string;
 }
+
+// ── Time formatting ───────────────────────────────────────────────────────────
 
 function formatTime(ms: number): string {
   if (ms <= 0) return '0:00';
@@ -17,7 +21,10 @@ function formatTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function PlayerClock({ timeMs, isActive, name }: PlayerClockProps) {
+  // Derive visual state: flagged (0ms), critical (<10s), low (<30s), normal
   const flagged  = timeMs <= 0;
   const lowTime  = timeMs > 0 && timeMs < 30_000;
   const critical = timeMs > 0 && timeMs < 10_000;
