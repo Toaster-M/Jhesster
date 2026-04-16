@@ -13,6 +13,7 @@ import MoveAnalysis from './MoveAnalysis';
 import PlayerClock from './PlayerClock';
 import { EVENTS, type ReceiveMovePayload, type GameEndPayload } from '../../hooks/useWebSocket';
 import { useTimer, type TimeControl } from '../../hooks/useTimer';
+import GameOverModal from '../Modals/GameOverModal';
 
 interface GameControllerProps {
   difficulty:    number;
@@ -62,6 +63,7 @@ export default function GameController({
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
   const [onlineEndReason, setOnlineEndReason] = useState<string | null>(null);
   const [flaggedColor, setFlaggedColor] = useState<Color | null>(null);
+  const [showGameOverModal, setShowGameOverModal] = useState(false);
   // Mobile: info panel is collapsed by default; auto-opens when game ends
   const [showMobileInfo, setShowMobileInfo] = useState(false);
 
@@ -316,6 +318,16 @@ export default function GameController({
     if (effectiveGameOver) setShowMobileInfo(true);
   }, [effectiveGameOver]);
 
+  // Show game-over modal with a short delay so the final move renders first
+  useEffect(() => {
+    if (!effectiveGameOver) {
+      setShowGameOverModal(false);
+      return;
+    }
+    const t = setTimeout(() => setShowGameOverModal(true), 600);
+    return () => clearTimeout(t);
+  }, [effectiveGameOver]);
+
   // Clock layout: top = opponent, bottom = you (respects board flip)
   const topColor    = isFlipped ? 'w' : 'b';
   const bottomColor = isFlipped ? 'b' : 'w';
@@ -433,6 +445,23 @@ export default function GameController({
           playerNames={playerNames}
         />
       </div>
+      {/* Game-over popup */}
+      {showGameOverModal && (
+        <GameOverModal
+          status={status}
+          winner={effectiveWinner}
+          isFlagged={isFlagged}
+          flaggedColor={flaggedColor}
+          onlineEndReason={onlineEndReason}
+          mode={mode}
+          playerColor={playerColor}
+          playerNames={playerNames}
+          history={history}
+          onNewGame={mode !== 'online' ? () => { handleNewGame(); resetTimer(); } : undefined}
+          onAnalyze={onAnalyze ? () => onAnalyze(history) : undefined}
+          onClose={() => setShowGameOverModal(false)}
+        />
+      )}
     </div>
   );
 }
