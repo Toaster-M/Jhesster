@@ -17,7 +17,7 @@ import { usePrefsStore } from './store/prefsStore';
 import { useGameStore } from './store/gameStore';
 import { useAuth } from './hooks/useAuth';
 import { connectSocket, disconnectSocket } from './services/socketService';
-import { getToken } from './services/authService';
+import { getToken, BACKEND_AVAILABLE } from './services/authService';
 import { EVENTS, type GameStartPayload } from './hooks/useWebSocket';
 import { TIME_CONTROLS, type TimeControl } from './hooks/useTimer';
 
@@ -393,13 +393,17 @@ export default function App() {
               <span className="text-xs text-gray-400 hidden sm:block">{user.username} · {user.rating}</span>
               <button onClick={logout} className="text-xs px-3 py-2 min-h-11 rounded-lg bg-white/8 hover:bg-white/15 text-gray-400 hover:text-white transition-all">Sign out</button>
             </>
-          ) : (
+          ) : BACKEND_AVAILABLE ? (
             <button
               onClick={() => { clearError(); setAuthScreen('login'); setShowAuth(true); }}
               className="text-xs px-4 py-2 min-h-11 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 text-white font-semibold transition-all"
             >
               Sign in
             </button>
+          ) : (
+            <span className="text-xs px-3 py-2 rounded-lg bg-white/5 text-gray-600 border border-white/8 cursor-default" title="Online features coming soon">
+              Sign in
+            </span>
           )}
           <button onClick={() => setShowSettings(true)} className="px-3 py-2 min-h-11 rounded-lg bg-white/5 hover:bg-white/10 text-gray-500 hover:text-gray-300 transition-all text-sm" aria-label="Settings">⚙</button>
         </div>
@@ -480,11 +484,19 @@ export default function App() {
           <div className="bg-white/4 border border-white/8 rounded-2xl p-4 flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-white font-semibold text-sm">Play Online</p>
-              {!isAuthenticated && (
-                <p className="text-gray-500 text-xs mt-0.5">Sign in to match with real opponents</p>
-              )}
+              <p className="text-gray-500 text-xs mt-0.5">
+                {!BACKEND_AVAILABLE
+                  ? 'Coming soon'
+                  : !isAuthenticated
+                  ? 'Sign in to match with real opponents'
+                  : null}
+              </p>
             </div>
-            {isAuthenticated ? (
+            {!BACKEND_AVAILABLE ? (
+              <span className="shrink-0 px-4 py-2 rounded-xl bg-white/5 text-gray-600 font-bold text-sm border border-white/8 cursor-default">
+                Soon
+              </span>
+            ) : isAuthenticated ? (
               <button
                 onClick={() => setScreen('lobby')}
                 className="shrink-0 px-4 py-2 min-h-11 rounded-xl bg-sky-600 text-white font-bold text-sm hover:bg-sky-500 active:scale-[0.98] transition-all"

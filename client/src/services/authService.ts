@@ -1,5 +1,8 @@
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const TOKEN_KEY = 'jhesster_token';
+
+/** True only when a real backend URL has been configured at build time. */
+export const BACKEND_AVAILABLE = !!import.meta.env.VITE_API_URL;
 
 export interface AuthUser {
   id: string;
