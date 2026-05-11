@@ -38,7 +38,7 @@ export class ChessEngine {
 
   private init(): void {
     try {
-      this.worker = new Worker('/stockfish.js');
+      this.worker = new Worker(`${import.meta.env.BASE_URL}stockfish.js`);
       this.worker.onmessage = this.handleMessage.bind(this);
       this.worker.onerror = (e) => console.error('Stockfish worker error:', e);
       this.worker.postMessage('uci');
