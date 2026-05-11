@@ -1,29 +1,27 @@
 /**
  * Jhesster Chess — Service Worker
  *
- * Strategy:
- *  - Precache the app shell and Stockfish on install
- *  - Cache-first for all same-origin GET requests
- *  - Network-first for /api/** so backend calls never return stale data
- *  - Serve cached index.html for navigation requests (SPA offline support)
+ * - Precaches app shell and Stockfish on install
+ * - Injects COOP/COEP headers on every response so SharedArrayBuffer is
+ *   available for the Stockfish WASM engine (required on GitHub Pages)
+ * - Cache-first for static assets, network-first for /api/**
+ * - Serves cached index.html for offline SPA navigation
  */
 
-const CACHE  = 'jhesster-v1';
+const CACHE  = 'jhesster-v2';
 const STATIC = [
-  '/',
-  '/manifest.json',
-  '/icon.svg',
-  '/favicon.svg',
-  '/stockfish.js',
-  '/stockfish.wasm',
+  './',
+  './manifest.json',
+  './icon.svg',
+  './favicon.svg',
+  './stockfish.js',
+  './stockfish.wasm',
 ];
 
 // ── Install: precache known static files ──────────────────────────────────────
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE).then((cache) => {
-      // addAll fails if any request fails; stockfish.wasm is large so we
-      // cache individually and ignore individual failures.
       return Promise.allSettled(
         STATIC.map((url) => cache.add(url).catch(() => {})),
       );
@@ -47,27 +45,39 @@ self.addEventListener('fetch', (e) => {
   const { request } = e;
   const url = new URL(request.url);
 
-  // Only handle same-origin GET requests
   if (request.method !== 'GET') return;
   if (url.origin !== self.location.origin) return;
 
-  // Network-first for API routes — never serve stale API data
   if (url.pathname.startsWith('/api/')) {
-    e.respondWith(networkFirst(request));
+    e.respondWith(networkFirst(request).then(withCoiHeaders));
     return;
   }
 
-  // For HTML navigation requests (SPA routes) — serve cached index.html offline
   if (request.mode === 'navigate') {
     e.respondWith(
-      fetch(request).catch(() => caches.match('/'))
+      fetch(request)
+        .then(withCoiHeaders)
+        .catch(() => caches.match('./').then((r) => r ? withCoiHeaders(r) : undefined))
     );
     return;
   }
 
-  // Cache-first for everything else (JS, CSS, images, WASM)
-  e.respondWith(cacheFirst(request));
+  e.respondWith(cacheFirst(request).then(withCoiHeaders));
 });
+
+// Wraps a response with COOP/COEP headers so SharedArrayBuffer is available.
+// Skips opaque (cross-origin no-cors) responses whose body cannot be read.
+function withCoiHeaders(response) {
+  if (!response || response.type === 'opaque') return response;
+  const headers = new Headers(response.headers);
+  headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+  headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
 
 async function cacheFirst(request) {
   const cached = await caches.match(request);
@@ -81,7 +91,6 @@ async function cacheFirst(request) {
     }
     return response;
   } catch {
-    // Asset not cached and network unavailable — return a minimal offline response
     return new Response('', { status: 503, statusText: 'Offline' });
   }
 }

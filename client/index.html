@@ -5,18 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- PWA / mobile -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#0f0f1a" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Jhesster" />
-    <link rel="apple-touch-icon" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
 
     <!-- SEO -->
     <meta name="description" content="Play, learn, and improve your chess — vs AI, local multiplayer, puzzles, and opening theory." />
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <title>Jhesster Chess</title>
+
+    <!-- Register SW; reload once so it can inject COOP/COEP headers for SharedArrayBuffer -->
+    <script>
+      if (!crossOriginIsolated && 'serviceWorker' in navigator) {
+        if (!sessionStorage._coiLoaded) {
+          sessionStorage._coiLoaded = '1';
+          navigator.serviceWorker.register('./sw.js').then(() => location.reload());
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
