@@ -28,6 +28,7 @@ export default function VsAIPage() {
   const [started, setStarted] = useState(false)
   const [aiThinking, setAiThinking] = useState(false)
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const game = useGameState()
   const sf = useStockfish()
@@ -44,14 +45,27 @@ export default function VsAIPage() {
   const triggerAI = useCallback(
     async (fen: string) => {
       setAiThinking(true)
+      setError(null)
       try {
         const uci = await sf.getBestMove(fen, diff.skill, diff.depth)
-        if (!uci || uci === '(none)') return
+        if (!uci || uci === '(none)') {
+          setError('AI failed to find a move. Resigning...')
+          setTimeout(() => game.resign(aiColorRef.current), 1000)
+          return
+        }
         const from = uci.slice(0, 2)
         const to = uci.slice(2, 4)
         const promo = uci[4] ?? undefined
-        game.applyMove(from, to, promo)
+        const moveOk = game.applyMove(from, to, promo)
+        if (!moveOk) {
+          setError('AI made an invalid move. Game error.')
+          return
+        }
         timer.switch(aiColorRef.current)
+      } catch (err) {
+        console.error('AI error:', err)
+        setError('AI encountered an error. Resigning...')
+        setTimeout(() => game.resign(aiColorRef.current), 1000)
       } finally {
         setAiThinking(false)
       }
@@ -63,7 +77,9 @@ export default function VsAIPage() {
   useEffect(() => {
     if (!started || game.isOver() || aiThinking) return
     if (game.turn() === aiColorRef.current) {
-      triggerAI(game.fen)
+      // Add a small delay for better UX
+      const timeout = setTimeout(() => triggerAI(game.fen), 500)
+      return () => clearTimeout(timeout)
     }
   }, [game.fen, started]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -79,9 +95,10 @@ export default function VsAIPage() {
     timer.reset()
     setStarted(true)
     setSaveMsg(null)
+    setError(null)
     if (playerColor === 'b') {
       // AI goes first
-      setTimeout(() => triggerAI(game.fen), 300)
+      setTimeout(() => triggerAI(game.fen), 500)
     } else {
       timer.start('w')
     }
@@ -113,6 +130,7 @@ export default function VsAIPage() {
       game.reset()
       timer.reset()
       setStarted(false)
+      setError(null)
     }
   }
 
@@ -166,6 +184,11 @@ export default function VsAIPage() {
               lightSquareColor={lightColor}
               darkSquareColor={darkColor}
             />
+            {error && (
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-red-400 bg-red-900/50 px-3 py-1 rounded-full">
+                {error}
+              </div>
+            )}
             {aiThinking && (
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-[#8892b0] bg-[#1a1a2e]/80 px-3 py-1 rounded-full">
                 AI thinking…
@@ -178,7 +201,7 @@ export default function VsAIPage() {
                 pgn={game.pgn()}
                 isTimed={isTimed}
                 onAnalyze={() => navigate('/')}
-                onPlayAgain={() => { setStarted(false); game.reset(); timer.reset() }}
+                onPlayAgain={() => { setStarted(false); game.reset(); timer.reset(); setError(null) }}
                 onHome={() => navigate('/')}
                 onSave={token ? handleSave : undefined}
               />
