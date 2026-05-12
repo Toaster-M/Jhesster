@@ -10,7 +10,7 @@ declare const self: ServiceWorkerGlobalScope & {
 }
 
 self.addEventListener('install', () => self.skipWaiting())
-self.addEventListener('activate', (event) => event.waitUntil(clientsClaim()))
+clientsClaim()
 cleanupOutdatedCaches()
 
 // VitePWA injects the asset manifest here at build time
