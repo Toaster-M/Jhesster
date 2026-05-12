@@ -3,126 +3,159 @@ import { useEffect, useRef, useCallback } from 'react'
 type StockfishCallback = (bestMove: string) => void
 type EvalCallback = (cp: number, depth: number) => void
 
+interface StockfishWorkerMessage {
+  data: string
+}
+
 export function useStockfish() {
   const workerRef = useRef<Worker | null>(null)
   const moveCallbackRef = useRef<StockfishCallback | null>(null)
   const evalCallbackRef = useRef<EvalCallback | null>(null)
-  const isReadyRef = useRef(false)
-  const readyPromiseRef = useRef<Promise<void>>(new Promise(() => {}))
+  const initPromiseRef = useRef<Promise<void>>(Promise.resolve())
 
   useEffect(() => {
-    // Try to load Stockfish from different possible locations
-    const stockfishUrls = [
-      import.meta.env.BASE_URL + 'stockfish-18-lite.js',
-      'stockfish-18-lite.js',
-      '/stockfish-18-lite.js',
-      'https://cdn.jsdelivr.net/npm/stockfish@18.0.7/dist/stockfish-18-lite.js'
-    ]
+    let isMounted = true
+    let currentWorker: Worker | null = null
 
-    let worker: Worker | null = null
-    let currentUrlIndex = 0
-
-    const initWorker = () => {
+    const initializeWorker = async () => {
       try {
-        const url = stockfishUrls[currentUrlIndex]
-        worker = new Worker(url)
-        workerRef.current = worker
+        // Try multiple sources for Stockfish
+        const sources = [
+          // CDN sources (most reliable)
+          'https://cdn.jsdelivr.net/npm/stockfish@18.0.7/dist/stockfish.wasm.js',
+          'https://unpkg.com/stockfish@18.0.7/dist/stockfish.wasm.js',
+          // Local sources (if included in public)
+          '/stockfish.wasm.js',
+          '/stockfish-18.wasm.js',
+          // Fallback to older lite version
+          'https://cdn.jsdelivr.net/npm/stockfish@16/dist/stockfish.js',
+        ]
 
-        worker.onmessage = (e: MessageEvent<string>) => {
-          const line = e.data
-          
-          // Check for readyok
-          if (line === 'readyok') {
-            isReadyRef.current = true
-          }
+        let lastError: Error | null = null
 
-          // Parse bestmove
-          const bmMatch = line.match(/^bestmove\s+(\S+)/)
-          if (bmMatch && moveCallbackRef.current) {
-            moveCallbackRef.current(bmMatch[1])
-          }
+        for (const source of sources) {
+          try {
+            // First, try to fetch the source to verify it exists
+            const response = await fetch(source, { method: 'HEAD' })
+            if (response.ok || response.status === 405) {
+              // 405 is OK for HEAD requests, means file exists
+              if (isMounted) {
+                currentWorker = new Worker(source, { type: 'classic' })
+                workerRef.current = currentWorker
 
-          // Parse eval
-          const infoMatch = line.match(/\bscore\s+(cp|mate)\s+(-?\d+).*\bdepth\s+(\d+)/)
-          if (infoMatch && evalCallbackRef.current) {
-            const type = infoMatch[1]
-            const val = parseInt(infoMatch[2])
-            const depth = parseInt(infoMatch[3])
-            const cp = type === 'mate' ? (val > 0 ? 10000 : -10000) : val
-            evalCallbackRef.current(cp, depth)
+                currentWorker.onmessage = (event: StockfishWorkerMessage) => {
+                  const line = event.data
+
+                  // Parse bestmove response
+                  const bestmoveMatch = line.match(/^bestmove\s+(\S+)/)
+                  if (bestmoveMatch && moveCallbackRef.current) {
+                    moveCallbackRef.current(bestmoveMatch[1])
+                  }
+
+                  // Parse evaluation scores
+                  const infoMatch = line.match(/\bscore\s+(cp|mate)\s+(-?\d+).*\bdepth\s+(\d+)/)
+                  if (infoMatch && evalCallbackRef.current) {
+                    const scoreType = infoMatch[1]
+                    const scoreValue = parseInt(infoMatch[2])
+                    const depth = parseInt(infoMatch[3])
+                    const centipawns =
+                      scoreType === 'mate'
+                        ? scoreValue > 0
+                          ? 10000
+                          : -10000
+                        : scoreValue
+                    evalCallbackRef.current(centipawns, depth)
+                  }
+                }
+
+                currentWorker.onerror = (err: ErrorEvent) => {
+                  console.error('Stockfish worker error:', err)
+                }
+
+                // Initialize UCI interface
+                currentWorker.postMessage('uci')
+                currentWorker.postMessage('isready')
+
+                console.log(`Successfully loaded Stockfish from: ${source}`)
+                return
+              }
+            }
+          } catch (err) {
+            lastError = err as Error
+            console.debug(`Failed to load from ${source}:`, err)
+            continue
           }
         }
 
-        worker.onerror = (err) => {
-          console.error('Stockfish worker error:', err)
-          worker?.terminate()
-          currentUrlIndex++
-          if (currentUrlIndex < stockfishUrls.length) {
-            setTimeout(initWorker, 100)
-          } else {
-            console.error('Failed to load Stockfish from all URLs')
-          }
+        if (isMounted) {
+          console.error('Failed to load Stockfish from any source:', lastError)
         }
-
-        worker.postMessage('uci')
-        worker.postMessage('isready')
       } catch (err) {
-        console.error('Failed to create worker:', err)
-        currentUrlIndex++
-        if (currentUrlIndex < stockfishUrls.length) {
-          setTimeout(initWorker, 100)
+        if (isMounted) {
+          console.error('Fatal error initializing Stockfish:', err)
         }
       }
     }
 
-    initWorker()
+    initializeWorker()
 
     return () => {
-      if (workerRef.current) {
+      isMounted = false
+      if (currentWorker) {
         try {
-          workerRef.current.postMessage('quit')
-          workerRef.current.terminate()
+          currentWorker.postMessage('quit')
+          currentWorker.terminate()
         } catch (err) {
-          console.error('Error terminating worker:', err)
+          console.debug('Error terminating worker:', err)
         }
-        workerRef.current = null
       }
+      workerRef.current = null
     }
   }, [])
 
   const setSkillLevel = useCallback((level: number) => {
-    const w = workerRef.current
-    if (!w) return
-    w.postMessage(`setoption name Skill Level value ${level}`)
+    const worker = workerRef.current
+    if (!worker) {
+      console.warn('Stockfish worker not initialized')
+      return
+    }
+    worker.postMessage(`setoption name Skill Level value ${Math.max(0, Math.min(20, level))}`)
   }, [])
 
   const getBestMove = useCallback(
     (fen: string, skillLevel: number, depth = 12): Promise<string> => {
       return new Promise((resolve) => {
-        const w = workerRef.current
-        if (!w) {
+        const worker = workerRef.current
+
+        if (!worker) {
           console.error('Stockfish worker not initialized')
           resolve('(none)')
           return
         }
 
-        // Set a timeout to avoid hanging forever
+        // Timeout to prevent infinite waiting
         const timeout = setTimeout(() => {
           moveCallbackRef.current = null
-          console.error('Stockfish getBestMove timeout')
+          console.warn('Stockfish timeout - no move returned')
           resolve('(none)')
-        }, 30000) // 30 second timeout
+        }, 45000) // 45 second timeout for very deep searches
 
-        moveCallbackRef.current = (move) => {
+        moveCallbackRef.current = (move: string) => {
           clearTimeout(timeout)
           moveCallbackRef.current = null
           resolve(move)
         }
 
-        w.postMessage('ucinewgame')
-        w.postMessage(`setoption name Skill Level value ${skillLevel}`)
-        w.postMessage(`position fen ${fen}`)
-        w.postMessage(`go depth ${depth}`)
+        try {
+          worker.postMessage('ucinewgame')
+          worker.postMessage(`setoption name Skill Level value ${Math.max(0, Math.min(20, skillLevel))}`)
+          worker.postMessage(`position fen ${fen}`)
+          worker.postMessage(`go depth ${depth}`)
+        } catch (err) {
+          clearTimeout(timeout)
+          console.error('Error sending message to Stockfish:', err)
+          resolve('(none)')
+        }
       })
     },
     [],
@@ -131,8 +164,9 @@ export function useStockfish() {
   const evaluate = useCallback(
     (fen: string, depth = 18): Promise<number> => {
       return new Promise((resolve) => {
-        const w = workerRef.current
-        if (!w) {
+        const worker = workerRef.current
+
+        if (!worker) {
           resolve(0)
           return
         }
@@ -140,10 +174,10 @@ export function useStockfish() {
         const timeout = setTimeout(() => {
           evalCallbackRef.current = null
           resolve(0)
-        }, 30000)
+        }, 45000)
 
         let lastCp = 0
-        evalCallbackRef.current = (cp, d) => {
+        evalCallbackRef.current = (cp: number, d: number) => {
           lastCp = cp
           if (d >= depth) {
             clearTimeout(timeout)
@@ -154,15 +188,29 @@ export function useStockfish() {
             resolve(lastCp)
           }
         }
-        w.postMessage(`position fen ${fen}`)
-        w.postMessage(`go depth ${depth}`)
+
+        try {
+          worker.postMessage(`position fen ${fen}`)
+          worker.postMessage(`go depth ${depth}`)
+        } catch (err) {
+          clearTimeout(timeout)
+          console.error('Error evaluating position:', err)
+          resolve(0)
+        }
       })
     },
     [],
   )
 
   const stop = useCallback(() => {
-    workerRef.current?.postMessage('stop')
+    const worker = workerRef.current
+    if (worker) {
+      try {
+        worker.postMessage('stop')
+      } catch (err) {
+        console.debug('Error stopping worker:', err)
+      }
+    }
   }, [])
 
   return { getBestMove, evaluate, setSkillLevel, stop }
