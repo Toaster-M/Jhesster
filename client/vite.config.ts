@@ -6,6 +6,11 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   base: '/Jhesster/',
   plugins: [
+    VitePWA({
+      workbox: {
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
+      },
+    }),
     react(),
     tailwindcss(),
     VitePWA({
